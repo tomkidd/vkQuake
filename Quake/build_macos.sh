@@ -25,6 +25,7 @@ EXECUTABLE_FOLDER_PATH="${CONTENTS_FOLDER_PATH}/MacOS"
 EXECUTABLE_NAME="vkquake"
 
 BUILT_PRODUCTS_DIR="build"
+PKGINFO="APPLVKQ1"
 
 # make the thing
 rm -rf "${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}"
@@ -162,44 +163,45 @@ echo -e "${PLIST}" > "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Info.plist"
 
 echo "bundle done."
 
+# user-specific values
+# specify the actual values in a separate file called make-macosx-values.sh
+
+# ****************************************************************************************
+# identity as specified in Keychain
+SIGNING_IDENTITY="Developer ID Application: Your Name (XXXXXXXXX)"
+
+ASC_USERNAME="your@apple.id"
+
+# signing password is app-specific (https://appleid.apple.com/account/manage) and stored in Keychain (as "notarize-app" in this case)
+ASC_PASSWORD="@keychain:notarize-app"
+
+# ProviderShortname can be found with
+# xcrun altool --list-providers -u your@apple.id -p "@keychain:notarize-app"
+ASC_PROVIDER="XXXXXXXXX"
+# ****************************************************************************************
+
+source make-macosx-values.sh
+
+# release build location
+RELEASE_LOCATION="build/release-darwin-universal2"
+
+# release build name
+RELEASE_BUILD="ioquake3.app"
+
+# Pre-notarized zip file (not what is shipped)
+PRE_NOTARIZED_ZIP="vkquake_prenotarized.zip"
+
+# Post-notarized zip file (shipped)
+POST_NOTARIZED_ZIP="vkquake_notarized.zip"
+
+BUNDLE_ID="com.macsourceports.vkquake3"
+
+# sign the resulting app bundle
+echo "signing..."
+# codesign --force --options runtime --deep --entitlements "${ENTITLEMENTS_FILE}" --sign "${SIGNING_IDENTITY}" ${RELEASE_LOCATION}/${RELEASE_BUILD}	# sign the resulting app bundle
+codesign --force --options runtime --deep --sign "${SIGNING_IDENTITY}" ${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}
+
 if [ "$1" == "notarize" ]; then
-	# user-specific values
-	# specify the actual values in a separate file called make-macosx-values.sh
-
-    # ****************************************************************************************
-    # identity as specified in Keychain
-    SIGNING_IDENTITY="Developer ID Application: Your Name (XXXXXXXXX)"
-
-    ASC_USERNAME="your@apple.id"
-
-    # signing password is app-specific (https://appleid.apple.com/account/manage) and stored in Keychain (as "notarize-app" in this case)
-    ASC_PASSWORD="@keychain:notarize-app"
-
-    # ProviderShortname can be found with
-    # xcrun altool --list-providers -u your@apple.id -p "@keychain:notarize-app"
-    ASC_PROVIDER="XXXXXXXXX"
-    # ****************************************************************************************
-
-    source make-macosx-values.sh
-
-    # release build location
-	RELEASE_LOCATION="build/release-darwin-universal2"
-
-	# release build name
-	RELEASE_BUILD="ioquake3.app"
-
-	# Pre-notarized zip file (not what is shipped)
-	PRE_NOTARIZED_ZIP="vkquake_prenotarized.zip"
-
-	# Post-notarized zip file (shipped)
-	POST_NOTARIZED_ZIP="vkquake_notarized.zip"
-
-    BUNDLE_ID="com.macsourceports.vkquake3"
-
-    # sign the resulting app bundle
-    echo "signing..."
-    # codesign --force --options runtime --deep --entitlements "${ENTITLEMENTS_FILE}" --sign "${SIGNING_IDENTITY}" ${RELEASE_LOCATION}/${RELEASE_BUILD}	# sign the resulting app bundle
-    codesign --force --options runtime --deep --sign "${SIGNING_IDENTITY}" ${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}
 
     cd ${BUILT_PRODUCTS_DIR}
 
